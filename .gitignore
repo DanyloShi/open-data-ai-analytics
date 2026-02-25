@@ -1,12 +1,12 @@
 __pychace__/
+src/__pychace__/
 .ipynb_checkpoints/
 
 venv/
 .venv/
 .env/
 
-data/ 
-raw/
+data/raw/
 
 .DS_Store
 .vscode
