@@ -1,0 +1,62 @@
+name: CI Self-Hosted
+
+on:
+  workflow_dispatch:
+    inputs:
+      module:
+        description: "Module to run on your self-hosted runner"
+        required: true
+        default: "visualization"
+        type: choice
+        options:
+          - data_load
+          - data_quality_analysis
+          - data_research
+          - visualization
+
+permissions:
+  contents: read
+
+jobs:
+  run-self-hosted:
+    runs-on: [self-hosted, linux]
+    env:
+      MODULE: ${{ inputs.module }}
+      MPLCONFIGDIR: .mplconfig
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Display Python info
+        run: |
+          which python3 || true
+          python3 --version
+          python3 -m pip --version
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+
+      - name: Run module on self-hosted runner
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/${MODULE}
+          echo "Running ${MODULE} on self-hosted runner"
+          python3 -m src.${MODULE} | tee artifacts/${MODULE}/run.log
+
+      - name: Collect visualization figures
+        if: ${{ inputs.module == 'visualization' }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/${MODULE}/figures
+          if ls reports/figures/*.png >/dev/null 2>&1; then
+            cp reports/figures/*.png artifacts/${MODULE}/figures/
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: self-hosted-${{ inputs.module }}-${{ github.run_id }}
+          path: artifacts/${{ inputs.module }}
+          retention-days: 14

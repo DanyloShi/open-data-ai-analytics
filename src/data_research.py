@@ -7,6 +7,9 @@ from sklearn.linear_model import LinearRegression
 def prepare_df(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
+    df["aqi"] = pd.to_numeric(df["aqi"], errors="coerce")
+    df["pm25"] = pd.to_numeric(df["pm25"], errors="coerce")
+
     df = df.dropna(subset=["aqi", "pm25"])
 
     return df

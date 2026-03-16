@@ -1,4 +1,8 @@
 from pathlib import Path
+import matplotlib
+
+# Use a non-interactive backend so CI/self-hosted runs do not need a GUI.
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import pandas as pd
 
