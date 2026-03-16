@@ -28,6 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.compute.outputs.matrix }}
+      has_modules: ${{ steps.compute.outputs.has_modules }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,10 +75,12 @@ jobs:
           DATA_RESEARCH_CHANGED: ${{ steps.filter.outputs.data_research || 'false' }}
           VISUALIZATION_CHANGED: ${{ steps.filter.outputs.visualization || 'false' }}
           COMMON_CHANGED: ${{ steps.filter.outputs.common || 'false' }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
         run: |
           python <<'PY' >> "$GITHUB_OUTPUT"
           import json
           import os
+          from pathlib import Path
 
           event = os.environ.get("EVENT_NAME", "")
           common = os.environ.get("COMMON_CHANGED", "false") == "true"
@@ -88,28 +91,40 @@ jobs:
               "visualization": os.environ.get("VISUALIZATION_CHANGED", "false") == "true",
           }
 
-          matrix = {}
-          for name, changed in modules.items():
-              matrix[name] = True if event == "workflow_dispatch" else (changed or common)
+          default_order = ["data_load", "data_quality_analysis", "data_research", "visualization"]
+          selected = []
 
-          print(f"matrix={json.dumps(matrix)}")
+          if event == "workflow_dispatch":
+              payload_path = Path(os.environ.get("GITHUB_EVENT_PATH", ""))
+              dispatch_module = "all"
+              if payload_path.is_file():
+                  with payload_path.open("r", encoding="utf-8") as fh:
+                      payload = json.load(fh)
+                  dispatch_module = payload.get("inputs", {}).get("module", "all").strip() or "all"
+
+              if dispatch_module == "all":
+                  selected = default_order
+              else:
+                  selected = [dispatch_module]
+          else:
+              for name in default_order:
+                  if modules.get(name) or common:
+                      selected.append(name)
+
+          has_modules = bool(selected)
+          matrix_entries = [{"module": name} for name in selected]
+
+          print(f"matrix={json.dumps({'include': matrix_entries})}")
+          print(f"has_modules={'true' if has_modules else 'false'}")
           PY
 
   run-modules:
     needs: detect-changes
+    if: ${{ needs.detect-changes.outputs.has_modules == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        module: [data_load, data_quality_analysis, data_research, visualization]
-    if: >-
-      (
-        github.event_name == 'workflow_dispatch' &&
-        (github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module)
-      ) || (
-        github.event_name != 'workflow_dispatch' &&
-        fromJSON(needs.detect-changes.outputs.matrix)[matrix.module]
-      )
+      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
