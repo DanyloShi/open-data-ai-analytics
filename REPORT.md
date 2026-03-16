@@ -73,40 +73,5 @@
 
 ## **10. Історія Git**
 Нижче наведено граф історії комітів:
+<img width="1170" height="819" alt="Знімок екрана 2026-02-26 о 12 05 42" src="https://github.com/user-attachments/assets/65f91dba-b513-475e-ba91-f5d5d2529817" />
 
-* da570e2 (HEAD -> main, origin/main, origin/HEAD) Add report
-* bf899f3 (tag: v0.1.0) Доадно changelog v0.1.0
-*   4250e5e Merge pull request #8 from DanyloShi/feature/visualization
-|\  
-| * 7a112b1 (origin/feature/visualization, feature/visualization) Додано візуалізацію
-|/  
-*   5c986f6 Merge pull request #7 from DanyloShi/feature/conflict-b
-|\  
-| *   ac9e82a Merge branch 'main' into feature/conflict-b
-| |\  
-| |/  
-|/|   
-* |   6250646 Merge pull request #6 from DanyloShi/feature/conflict-a
-|\ \  
-| * | 9763d87 (origin/feature/conflict-a, feature/conflict-a) Оновлено .gitignore
-* | | 377bb3d Merge pull request #5 from DanyloShi/feature/conflict-a
-|\| | 
-| * | 730f5f4 Оновлено README (3 питання)
-|/ /  
-* |   c160718 Merge pull request #4 from DanyloShi/feature/data_research
-|\ \  
-| * | 3030f9d (origin/feature/data_research, feature/data_research) Додано код для аналізу даних та побудови моделі
-* | |   91a9dc5 Merge pull request #3 from DanyloShi/feature/data_quality_analysis
-|\ \ \  
-| |/ /  
-|/| |   
-| * | 7c6c569 (origin/feature/data_quality_analysis, feature/data_quality_analysis) Додано аналіз якості даних
-* | | 9ed2d5b Merge pull request #2 from DanyloShi/feature/data_load
-|\| | 
-| * | 387a439 (origin/feature/data_load, feature/data_load) Додано README.md в папку з даними
-* | | d03b94c Merge pull request #1 from DanyloShi/feature/data_load
-|\| | 
-| * | 2db1979 Додано скрипт для завантаження даних
-|/ /  
-| * bd42d0a (origin/feature/conflict-b, feature/conflict-b) Оновлено README (3 питання) конлфікт В
-|/ 
