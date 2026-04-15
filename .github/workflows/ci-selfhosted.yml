@@ -31,11 +31,18 @@ jobs:
           python3 --version
           python3 -m pip --version
 
+      - name: Create virtual environment
+        run: |
+          set -euo pipefail
+          python3 -m venv .venv-ci
+          .venv-ci/bin/python -m pip --version
+
       - name: Install dependencies
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install -r visualization/requirements.txt
-          python3 -m pip install -r web/requirements.txt
+          set -euo pipefail
+          .venv-ci/bin/python -m pip install --upgrade pip
+          .venv-ci/bin/python -m pip install -r visualization/requirements.txt
+          .venv-ci/bin/python -m pip install -r web/requirements.txt
 
       - name: Run selected module
         run: |
@@ -48,10 +55,10 @@ jobs:
           export PLOTS_DIR="$WORK_DIR/plots"
           export CSV_PATH="$PWD/data/dataset.csv"
 
-          python3 data_load/app.py | tee "artifacts/${MODULE}/data_load.log"
+          .venv-ci/bin/python data_load/app.py | tee "artifacts/${MODULE}/data_load.log"
 
           if [ "${MODULE}" != "data_load" ]; then
-            python3 "${MODULE}/app.py" | tee "artifacts/${MODULE}/${MODULE}.log"
+            .venv-ci/bin/python "${MODULE}/app.py" | tee "artifacts/${MODULE}/${MODULE}.log"
           fi
 
       - name: Collect generated outputs
