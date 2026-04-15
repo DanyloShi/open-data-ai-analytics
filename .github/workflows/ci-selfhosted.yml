@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   run-self-hosted:
-    runs-on: [self-hosted, linux]
+    runs-on: [self-hosted, macOS. ARM64]
     env:
       MODULE: ${{ inputs.module }}
     steps:
