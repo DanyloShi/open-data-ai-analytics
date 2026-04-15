@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Air Quality Pipeline</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --accent: #0f766e;
+      --muted: #4b5563;
+      --border: #e5e7eb;
+    }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--bg); color: var(--text); }
+    main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    h1 { margin-bottom: 8px; }
+    p { color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+    .item { margin: 6px 0; }
+    img { width: 100%; border: 1px solid var(--border); border-radius: 8px; background: white; }
+    .badge { color: white; background: var(--accent); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Air Quality Pipeline</h1>
+    <p>Simple DevOps-ready demo: CSV -> SQLite -> quality/research reports -> plots -> web view.</p>
+
+    <div class="card">
+      <h2>Quality report <span class="badge">data_quality_analysis</span></h2>
+      {% if quality %}
+        {% for key, value in quality.items() %}
+          <div class="item"><strong>{{ key }}</strong>: {{ value }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="item">No quality report yet.</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Research report <span class="badge">data_research</span></h2>
+      {% if research %}
+        {% for key, value in research.items() %}
+          <div class="item"><strong>{{ key }}</strong>: {{ value }}</div>
+        {% endfor %}
+      {% else %}
+        <div class="item">No research report yet.</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Visualizations <span class="badge">visualization</span></h2>
+      <div class="grid">
+        {% for plot in plots %}
+          <img src="/plots/{{ plot }}" alt="{{ plot }}">
+        {% endfor %}
+      </div>
+      {% if not plots %}
+        <div class="item">No plots generated yet.</div>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

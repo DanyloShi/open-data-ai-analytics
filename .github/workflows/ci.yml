@@ -1,4 +1,3 @@
-
 name: CI Modules
 
 on:
@@ -9,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       module:
-        description: "Which module to run (or 'all')"
+        description: "Which module to run (or all)"
         required: true
         default: "all"
         type: choice
@@ -24,107 +23,13 @@ permissions:
   contents: read
 
 jobs:
-  detect-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.compute.outputs.matrix }}
-      has_modules: ${{ steps.compute.outputs.has_modules }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detect paths per module
-        if: ${{ github.event_name != 'workflow_dispatch' }}
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            data_load:
-              - 'src/data_load.py'
-              - 'data/**'
-              - 'requirements.txt'
-              - 'pyproject.toml'
-            data_quality_analysis:
-              - 'src/data_quality_analysis.py'
-              - 'requirements.txt'
-              - 'pyproject.toml'
-            data_research:
-              - 'src/data_research.py'
-              - 'requirements.txt'
-              - 'pyproject.toml'
-            visualization:
-              - 'src/visualization.py'
-              - 'reports/**'
-              - 'requirements.txt'
-              - 'pyproject.toml'
-            common:
-              - 'src/__init__.py'
-              - '.github/**'
-              - '.gitignore'
-              - 'README.md'
-              - 'REPORT*.md'
-
-      - name: Compute module matrix
-        id: compute
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          DATA_LOAD_CHANGED: ${{ steps.filter.outputs.data_load || 'false' }}
-          DATA_QUALITY_ANALYSIS_CHANGED: ${{ steps.filter.outputs.data_quality_analysis || 'false' }}
-          DATA_RESEARCH_CHANGED: ${{ steps.filter.outputs.data_research || 'false' }}
-          VISUALIZATION_CHANGED: ${{ steps.filter.outputs.visualization || 'false' }}
-          COMMON_CHANGED: ${{ steps.filter.outputs.common || 'false' }}
-          GITHUB_EVENT_PATH: ${{ github.event_path }}
-        run: |
-          python <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          import os
-          from pathlib import Path
-
-          event = os.environ.get("EVENT_NAME", "")
-          common = os.environ.get("COMMON_CHANGED", "false") == "true"
-          modules = {
-              "data_load": os.environ.get("DATA_LOAD_CHANGED", "false") == "true",
-              "data_quality_analysis": os.environ.get("DATA_QUALITY_ANALYSIS_CHANGED", "false") == "true",
-              "data_research": os.environ.get("DATA_RESEARCH_CHANGED", "false") == "true",
-              "visualization": os.environ.get("VISUALIZATION_CHANGED", "false") == "true",
-          }
-
-          default_order = ["data_load", "data_quality_analysis", "data_research", "visualization"]
-          selected = []
-
-          if event == "workflow_dispatch":
-              payload_path = Path(os.environ.get("GITHUB_EVENT_PATH", ""))
-              dispatch_module = "all"
-              if payload_path.is_file():
-                  with payload_path.open("r", encoding="utf-8") as fh:
-                      payload = json.load(fh)
-                  dispatch_module = payload.get("inputs", {}).get("module", "all").strip() or "all"
-
-              if dispatch_module == "all":
-                  selected = default_order
-              else:
-                  selected = [dispatch_module]
-          else:
-              for name in default_order:
-                  if modules.get(name) or common:
-                      selected.append(name)
-
-          has_modules = bool(selected)
-          matrix_entries = [{"module": name} for name in selected]
-
-          print(f"matrix={json.dumps({'include': matrix_entries})}")
-          print(f"has_modules={'true' if has_modules else 'false'}")
-          PY
-
   run-modules:
-    needs: detect-changes
-    if: ${{ needs.detect-changes.outputs.has_modules == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.detect-changes.outputs.matrix) }}
+      matrix:
+        module: [data_load, data_quality_analysis, data_research, visualization]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -134,35 +39,53 @@ jobs:
         with:
           python-version: "3.12"
           cache: "pip"
-          cache-dependency-path: requirements.txt
+          cache-dependency-path: |
+            visualization/requirements.txt
+            web/requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r visualization/requirements.txt
+          python -m pip install -r web/requirements.txt
 
-      - name: Run module
+      - name: Run selected module pipeline
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module }}
         env:
           MODULE: ${{ matrix.module }}
-          MPLCONFIGDIR: .mplconfig
         run: |
           set -euo pipefail
-          mkdir -p artifacts/${MODULE}
-          echo "Running ${MODULE}"
-          python -m src.${MODULE} | tee artifacts/${MODULE}/run.log
+          mkdir -p artifacts/${MODULE}/work
 
-      - name: Collect visualization figures
-        if: ${{ matrix.module == 'visualization' }}
+          export WORK_DIR="$PWD/artifacts/${MODULE}/work"
+          export DB_PATH="$WORK_DIR/db/air_quality.db"
+          export REPORTS_DIR="$WORK_DIR/reports"
+          export PLOTS_DIR="$WORK_DIR/plots"
+          export CSV_PATH="$PWD/data/dataset.csv"
+
+          python data_load/app.py | tee "artifacts/${MODULE}/data_load.log"
+
+          if [ "${MODULE}" != "data_load" ]; then
+            python "${MODULE}/app.py" | tee "artifacts/${MODULE}/${MODULE}.log"
+          fi
+
+      - name: Collect generated outputs
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module }}
+        env:
+          MODULE: ${{ matrix.module }}
         run: |
           set -euo pipefail
-          mkdir -p artifacts/${{ matrix.module }}/figures
-          if ls reports/figures/*.png >/dev/null 2>&1; then
-            cp reports/figures/*.png artifacts/${{ matrix.module }}/figures/
+          if [ -d "artifacts/${MODULE}/work/reports" ]; then
+            cp -R "artifacts/${MODULE}/work/reports" "artifacts/${MODULE}/reports"
+          fi
+          if [ -d "artifacts/${MODULE}/work/plots" ]; then
+            cp -R "artifacts/${MODULE}/work/plots" "artifacts/${MODULE}/plots"
           fi
 
       - name: Upload artifacts
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.module == 'all' || github.event.inputs.module == matrix.module }}
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.module }}-logs-${{ github.run_id }}
+          name: artifacts-${{ matrix.module }}-${{ github.run_id }}
           path: artifacts/${{ matrix.module }}
           retention-days: 14

@@ -1,0 +1,88 @@
+name: air_quality_pipeline
+
+services:
+  data_load:
+    build:
+      context: .
+      dockerfile: data_load/Dockerfile
+    environment:
+      DB_PATH: /work/db/air_quality.db
+      REPORTS_DIR: /work/reports
+      PLOTS_DIR: /work/plots
+      CSV_PATH: /app/data/dataset.csv
+    volumes:
+      - pipeline_data:/work
+      - ./data:/app/data:ro
+    networks:
+      - pipeline_net
+
+  data_quality_analysis:
+    build:
+      context: .
+      dockerfile: data_quality_analysis/Dockerfile
+    environment:
+      DB_PATH: /work/db/air_quality.db
+      REPORTS_DIR: /work/reports
+      PLOTS_DIR: /work/plots
+    volumes:
+      - pipeline_data:/work
+    depends_on:
+      - data_load
+    networks:
+      - pipeline_net
+
+  data_research:
+    build:
+      context: .
+      dockerfile: data_research/Dockerfile
+    environment:
+      DB_PATH: /work/db/air_quality.db
+      REPORTS_DIR: /work/reports
+      PLOTS_DIR: /work/plots
+    volumes:
+      - pipeline_data:/work
+    depends_on:
+      - data_load
+    networks:
+      - pipeline_net
+
+  visualization:
+    build:
+      context: .
+      dockerfile: visualization/Dockerfile
+    environment:
+      DB_PATH: /work/db/air_quality.db
+      REPORTS_DIR: /work/reports
+      PLOTS_DIR: /work/plots
+    volumes:
+      - pipeline_data:/work
+    depends_on:
+      - data_load
+    networks:
+      - pipeline_net
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    environment:
+      REPORTS_DIR: /work/reports
+      PLOTS_DIR: /work/plots
+      PORT: "8080"
+    volumes:
+      - pipeline_data:/work:ro
+    depends_on:
+      - data_quality_analysis
+      - data_research
+      - visualization
+    ports:
+      - "8080:8080"
+    networks:
+      - pipeline_net
+
+volumes:
+  pipeline_data:
+
+networks:
+  pipeline_net:
+    driver: bridge

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       module:
-        description: "Module to run on your self-hosted runner"
+        description: "Module to run on self-hosted"
         required: true
         default: "visualization"
         type: choice
@@ -22,41 +22,51 @@ jobs:
     runs-on: [self-hosted, linux]
     env:
       MODULE: ${{ inputs.module }}
-      MPLCONFIGDIR: .mplconfig
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Display Python info
+      - name: Show Python version
         run: |
-          which python3 || true
           python3 --version
           python3 -m pip --version
 
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install -r requirements.txt
+          python3 -m pip install -r visualization/requirements.txt
+          python3 -m pip install -r web/requirements.txt
 
-      - name: Run module on self-hosted runner
+      - name: Run selected module
         run: |
           set -euo pipefail
-          mkdir -p artifacts/${MODULE}
-          echo "Running ${MODULE} on self-hosted runner"
-          python3 -m src.${MODULE} | tee artifacts/${MODULE}/run.log
+          mkdir -p artifacts/${MODULE}/work
 
-      - name: Collect visualization figures
-        if: ${{ inputs.module == 'visualization' }}
+          export WORK_DIR="$PWD/artifacts/${MODULE}/work"
+          export DB_PATH="$WORK_DIR/db/air_quality.db"
+          export REPORTS_DIR="$WORK_DIR/reports"
+          export PLOTS_DIR="$WORK_DIR/plots"
+          export CSV_PATH="$PWD/data/dataset.csv"
+
+          python3 data_load/app.py | tee "artifacts/${MODULE}/data_load.log"
+
+          if [ "${MODULE}" != "data_load" ]; then
+            python3 "${MODULE}/app.py" | tee "artifacts/${MODULE}/${MODULE}.log"
+          fi
+
+      - name: Collect generated outputs
         run: |
           set -euo pipefail
-          mkdir -p artifacts/${MODULE}/figures
-          if ls reports/figures/*.png >/dev/null 2>&1; then
-            cp reports/figures/*.png artifacts/${MODULE}/figures/
+          if [ -d "artifacts/${MODULE}/work/reports" ]; then
+            cp -R "artifacts/${MODULE}/work/reports" "artifacts/${MODULE}/reports"
+          fi
+          if [ -d "artifacts/${MODULE}/work/plots" ]; then
+            cp -R "artifacts/${MODULE}/work/plots" "artifacts/${MODULE}/plots"
           fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: self-hosted-${{ inputs.module }}-${{ github.run_id }}
+          name: artifacts-selfhosted-${{ inputs.module }}-${{ github.run_id }}
           path: artifacts/${{ inputs.module }}
           retention-days: 14

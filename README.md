@@ -1,13 +1,47 @@
-# **Відкриті дані AI Analytics**
+# Air Quality DevOps Pipeline
 
-## **Мета проекту**
-Аналіз зміни якості повітря в Україні за показником PM2.5 та AQI, знайти закономірності (сезонність/відмінності між містами) і побудувати прості прогностичні моделі. Отримання навичок використання системи контролю версій git
+A minimal project for two labs:
 
-## **Джерело відкритих даних**
-Портал data.gov.ua 
-Набір даних “Щогодинні концентрації та індекс якості атмосферного повітря… (PM2.5, AQI)”
+- **Lab 2**: CI/CD with GitHub Actions (GitHub-hosted and self-hosted).
+- **Lab 3**: Docker-based service architecture with `compose.yaml`.
 
-## **Аналітичні питання**
-1. Чи взимку середні значення PM2.5 та AQI інші, аніж влітку
-2. Чи є стабільні "лідери" з гіршою якістю повітря у порівняння з іншими містами
-3. Чи існує статистично значущий зв’язок між концентрацією PM2.5 та індексом якості повітря AQI, і чи можна використати PM2.5 для прогнозування AQI?
+## Project structure
+
+- `data_load/` - reads CSV and loads SQLite database.
+- `data_quality_analysis/` - computes quality metrics.
+- `data_research/` - computes basic statistics.
+- `visualization/` - builds 2 PNG charts.
+- `web/` - shows reports and plots in browser.
+- `common/` - shared paths and DB helpers.
+- `compose.yaml` - starts all services.
+
+## Local run without Docker
+
+```bash
+python3 data_load/app.py
+python3 data_quality_analysis/app.py
+python3 data_research/app.py
+python3 visualization/app.py
+python3 web/app.py
+```
+
+Default outputs are written into `artifacts/`.
+
+## Docker run (Lab 3)
+
+```bash
+docker compose up --build
+```
+
+Open <http://localhost:8080>.
+
+## CI/CD (Lab 2)
+
+- `.github/workflows/ci.yml`:
+  - triggers on `push`, `pull_request`, `workflow_dispatch`;
+  - runs modules in parallel with matrix strategy;
+  - uploads logs/reports/plots as artifacts.
+
+- `.github/workflows/ci-selfhosted.yml`:
+  - manual run on self-hosted runner;
+  - runs one selected module and uploads artifacts.

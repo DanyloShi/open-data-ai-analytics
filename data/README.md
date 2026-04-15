@@ -1,4 +1,4 @@
+# Data
 
-## **Джерело відкритих даних**
-Портал data.gov.ua 
-Набір даних “Щогодинні концентрації та індекс якості атмосферного повітря… (PM2.5, AQI)”
+- `dataset.csv` is a compact sample used for CI/CD and Docker demos.
+- Real/raw large datasets can be mounted locally and passed via `CSV_PATH`.
