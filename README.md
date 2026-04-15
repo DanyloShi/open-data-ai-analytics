@@ -1,10 +1,5 @@
 # Air Quality DevOps Pipeline
 
-A minimal project for two labs:
-
-- **Lab 2**: CI/CD with GitHub Actions (GitHub-hosted and self-hosted).
-- **Lab 3**: Docker-based service architecture with `compose.yaml`.
-
 ## Project structure
 
 - `data_load/` - reads CSV and loads SQLite database.
@@ -27,7 +22,7 @@ python3 web/app.py
 
 Default outputs are written into `artifacts/`.
 
-## Docker run (Lab 3)
+## Docker run
 
 ```bash
 docker compose up --build
@@ -35,7 +30,7 @@ docker compose up --build
 
 Open <http://localhost:8080>.
 
-## CI/CD (Lab 2)
+## CI/CD
 
 - `.github/workflows/ci.yml`:
   - triggers on `push`, `pull_request`, `workflow_dispatch`;
