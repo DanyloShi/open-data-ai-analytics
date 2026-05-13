@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: air-quality-web
-          image: khomyshynd/air-quality-web:1.2
+          image: khomdanylo/air-quality-web:1.2
           ports:
             - containerPort: 8080
           env:

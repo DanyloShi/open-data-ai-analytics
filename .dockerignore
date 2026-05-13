@@ -1,0 +1,19 @@
+venv
+.git
+.github
+artifacts
+data
+# plots
+# reports
+__pycache__
+*.pyc
+.ipynb_checkpoints
+.DS_Store
+.git
+.github
+.mplconfig
+actions-runner
+db
+*.log
+.env
+.env.*
