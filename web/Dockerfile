@@ -6,5 +6,7 @@ COPY common /app/common
 COPY web/app.py /app/web/app.py
 COPY web/templates /app/web/templates
 COPY web/static /app/web/static
+COPY reports /work/reports
+COPY plots /work/plots
 EXPOSE 8080
 CMD ["python", "web/app.py"]
