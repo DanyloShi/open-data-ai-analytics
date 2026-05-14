@@ -1,0 +1,8 @@
+{
+  "plots": [
+    "aqi_hist.png",
+    "pm25_daily_mean.png"
+  ],
+  "rows_used": 24,
+  "aqi_points": 24
+}

@@ -1,0 +1,3 @@
+Rows inserted: 24
+DB: /work/db/air_quality.db
+CSV: /app/data/dataset.csv

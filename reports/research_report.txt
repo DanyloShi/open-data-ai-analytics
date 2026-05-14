@@ -1,0 +1,4 @@
+Rows total: 24
+Distinct cities: 4
+AQI avg/min/max: 41.458 / 27.0 / 60.0
+PM2.5 avg/min/max: 11.133 / 6.1 / 18.3

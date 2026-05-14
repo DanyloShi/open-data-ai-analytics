@@ -1,0 +1,5 @@
+{
+  "csv_path": "/app/data/dataset.csv",
+  "db_path": "/work/db/air_quality.db",
+  "rows_inserted": 24
+}

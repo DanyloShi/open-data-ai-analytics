@@ -1,0 +1,5 @@
+Rows total: 24
+Missing AQI: 0
+Missing PM2.5: 0
+Duplicate rows: 0
+Negative values: 0

@@ -1,0 +1,29 @@
+{
+  "db_path": "/work/db/air_quality.db",
+  "total_rows": 24,
+  "distinct_cities": 4,
+  "aqi_avg": 41.458,
+  "aqi_min": 27.0,
+  "aqi_max": 60.0,
+  "pm25_avg": 11.133,
+  "pm25_min": 6.1,
+  "pm25_max": 18.3,
+  "top_cities_by_avg_aqi": [
+    {
+      "city_id": "4",
+      "avg_aqi": 56.0
+    },
+    {
+      "city_id": "3",
+      "avg_aqi": 47.0
+    },
+    {
+      "city_id": "2",
+      "avg_aqi": 34.33
+    },
+    {
+      "city_id": "1",
+      "avg_aqi": 32.43
+    }
+  ]
+}

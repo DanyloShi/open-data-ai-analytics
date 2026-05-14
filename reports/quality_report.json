@@ -1,0 +1,8 @@
+{
+  "db_path": "/work/db/air_quality.db",
+  "total_rows": 24,
+  "missing_aqi": 0,
+  "missing_pm25": 0,
+  "duplicate_rows": 0,
+  "invalid_negative_values": 0
+}
